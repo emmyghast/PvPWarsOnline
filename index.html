@@ -63,6 +63,9 @@
     <button id="copyToClipboardButton">Copy to Clipboard</button>
     <button id="discordFriendlyButton">Discord Friendly Copy</button>
 </div>
+<div>
+    <button id="refreshButton">Refresh</button>
+</div>
 
 <script>
     document.addEventListener('DOMContentLoaded', function() {
@@ -78,7 +81,8 @@
         const sameShardUsers = document.getElementById('sameShardUsers');
         const copyToClipboardButton = document.getElementById('copyToClipboardButton');
         const discordFriendlyButton = document.getElementById('discordFriendlyButton');
-
+        const refreshButton = document.getElementById('refreshButton');
+        
         // Function to fetch data from the API
         function fetchData(url) {
             return fetch(url)
@@ -166,6 +170,9 @@
             const discordFriendlyText = sameShardUsersText.replace(/_/g, '\\_');
             navigator.clipboard.writeText(discordFriendlyText)
                 .then(() => alert('Discord friendly usernames copied to clipboard.'));
+        });
+        refreshButton.addEventListener('click', function() {
+            location.reload();
         });
     });
 </script>
