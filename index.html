@@ -1,10 +1,173 @@
 <!DOCTYPE html>
-<html lang="en">
+<html>
 <head>
-    <meta charset="UTF-8">
-    <title>PvPWars Accounts Online!</title>
+    <title>Shard Scraper</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 20px;
+        }
+
+        h1 {
+            font-size: 24px;
+            font-weight: bold;
+        }
+
+        label {
+            font-weight: bold;
+        }
+
+        input[type="text"] {
+            width: 300px;
+            padding: 5px;
+            margin-right: 10px;
+        }
+
+        button {
+            padding: 5px 10px;
+            cursor: pointer;
+        }
+
+        ul {
+            list-style: none;
+            padding-left: 0;
+            max-height: 150px;
+            overflow: auto;
+        }
+    </style>
 </head>
 <body>
+<h1>Shard Scraper</h1>
 
+<div>
+    <label for="shardInput">Enter the shardname (e.g., s1) or 'all' for all accounts online:</label>
+    <input type="text" id="shardInput">
+    <button id="searchShardButton">Search Shard</button>
+    <button id="allAccountsButton">All Accounts Online</button>
+</div>
+
+<div>
+    <button id="copyAccountsButton">Copy Accounts</button>
+    <ul id="playerList"></ul>
+</div>
+
+<div>
+    <label for="usernameInput">Enter the username:</label>
+    <input type="text" id="usernameInput">
+    <button id="searchUsernameButton">Search Username</button>
+</div>
+
+<div>
+    <p id="onlineServers"></p>
+    <p id="sameShardUsers"></p>
+    <button id="copyToClipboardButton">Copy to Clipboard</button>
+    <button id="discordFriendlyButton">Discord Friendly Copy</button>
+</div>
+
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const shardInput = document.getElementById('shardInput');
+        const searchShardButton = document.getElementById('searchShardButton');
+        const allAccountsButton = document.getElementById('allAccountsButton');
+        const copyAccountsButton = document.getElementById('copyAccountsButton');
+        const playerList = document.getElementById('playerList');
+
+        const usernameInput = document.getElementById('usernameInput');
+        const searchUsernameButton = document.getElementById('searchUsernameButton');
+        const onlineServers = document.getElementById('onlineServers');
+        const sameShardUsers = document.getElementById('sameShardUsers');
+        const copyToClipboardButton = document.getElementById('copyToClipboardButton');
+        const discordFriendlyButton = document.getElementById('discordFriendlyButton');
+
+        // Function to fetch data from the API
+        function fetchData(url) {
+            return fetch(url)
+                .then(response => response.json())
+                .catch(error => {
+                    console.error('Error fetching data:', error);
+                    alert('Failed to fetch data from the API.');
+                });
+        }
+
+        // Function to display players in the list
+        function displayPlayers(players) {
+            playerList.innerHTML = '';
+            if (players.length > 0) {
+                players.forEach(player => {
+                    const listItem = document.createElement('li');
+                    listItem.textContent = player;
+                    playerList.appendChild(listItem);
+                });
+            } else {
+                playerList.textContent = 'No players found.';
+            }
+        }
+
+        // Search Shard Button Click Event
+        searchShardButton.addEventListener('click', function() {
+            const shardName = shardInput.value;
+            const apiUrl = `https://web.pvpwars.net/api/players.php`;
+            fetchData(apiUrl)
+                .then(data => {
+                    const shardPlayers = data.filter(player => player.server === shardName);
+                    const playerNames = shardPlayers.map(player => player.username);
+                    displayPlayers(playerNames);
+                });
+        });
+
+        // All Accounts Button Click Event
+        allAccountsButton.addEventListener('click', function() {
+            const apiUrl = `https://web.pvpwars.net/api/players.php`;
+            fetchData(apiUrl)
+                .then(data => {
+                    const allPlayerNames = data.map(player => player.username);
+                    displayPlayers(allPlayerNames);
+                });
+        });
+
+        // Copy Accounts Button Click Event
+        copyAccountsButton.addEventListener('click', function() {
+            const playerNames = Array.from(playerList.querySelectorAll('li')).map(li => li.textContent);
+            const playerNamesString = playerNames.join('\n');
+            navigator.clipboard.writeText(playerNamesString)
+                .then(() => alert('Player names copied to clipboard.'));
+        });
+
+        // Search Username Button Click Event
+        searchUsernameButton.addEventListener('click', function() {
+            const username = usernameInput.value.toLowerCase();
+            const apiUrl = `https://web.pvpwars.net/api/players.php`;
+            fetchData(apiUrl)
+                .then(data => {
+                    const matchingPlayers = data.filter(player => player.username.toLowerCase() === username);
+                    if (matchingPlayers.length > 0) {
+                        const onlineServersText = matchingPlayers.map(player => player.server).join(', ');
+                        onlineServers.textContent = `${username} is online on: ${onlineServersText}`;
+
+                        const sameShardUsersText = data.filter(player => player.server === matchingPlayers[0].server)
+                            .map(player => player.username)
+                            .join('\n');
+                        sameShardUsers.textContent = `Shard: ${matchingPlayers[0].server}\n${sameShardUsersText}`;
+
+                        copyToClipboardButton.disabled = false;
+                        discordFriendlyButton.disabled = false;
+                    } else {
+                        onlineServers.textContent = `${username} is not online on any server.`;
+                        sameShardUsers.textContent = '';
+                        copyToClipboardButton.disabled = true;
+                        discordFriendlyButton.disabled = true;
+                    }
+                });
+        });
+
+        // Discord Friendly Button Click Event
+        discordFriendlyButton.addEventListener('click', function() {
+            const sameShardUsersText = sameShardUsers.textContent.split('\n').slice(1).join('\n');
+            const discordFriendlyText = sameShardUsersText.replace(/_/g, '\\_');
+            navigator.clipboard.writeText(discordFriendlyText)
+                .then(() => alert('Discord friendly usernames copied to clipboard.'));
+        });
+    });
+</script>
 </body>
 </html>
